@@ -3,15 +3,25 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
+  // KOSONGKAN DI SINI. URL sudah ditarik otomatis dari prisma.config.ts
+}
+
+model Pengguna {
+  id        Int         @id @default(autoincrement())
+  nama      String      @default("Pengguna Baru")
+  saldoAwal Int         @default(0)
+  transaksi Transaksi[] 
 }
 
 model Transaksi {
-  id        Int      @id @default(autoincrement())
-  judul     String   // Misalnya: "Beli Nasi Goreng" atau "Gaji Bulanan"
-  nominal   Int      // Angka uangnya, misal: 15000
-  tipe      String   // Kita akan isi dengan "PEMASUKAN" atau "PENGELUARAN"
-  tanggal   DateTime @default(now()) // Otomatis mencatat waktu saat ini
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  judul      String
+  nominal    Int
+  tipe       String
+  tanggal    DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  penggunaId Int?     
+  pengguna   Pengguna? @relation(fields: [penggunaId], references: [id])
 }
