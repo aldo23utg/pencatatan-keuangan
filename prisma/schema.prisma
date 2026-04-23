@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+model Transaksi {
+  id        Int      @id @default(autoincrement())
+  judul     String   // Misalnya: "Beli Nasi Goreng" atau "Gaji Bulanan"
+  nominal   Int      // Angka uangnya, misal: 15000
+  tipe      String   // Kita akan isi dengan "PEMASUKAN" atau "PENGELUARAN"
+  tanggal   DateTime @default(now()) // Otomatis mencatat waktu saat ini
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
