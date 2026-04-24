@@ -1,39 +1,30 @@
+import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import RiwayatClient from "@/components/RiwayatClient";
-import Link from "next/link";
+
+export const dynamic = "force-dynamic";
 
 export default async function RiwayatPage() {
-  const profil = await prisma.pengguna.findFirst();
+  const user = await getSession();
+  let data: { id: number; judul: string; nominal: number; tipe: string; tanggal: Date }[] = [];
 
-  if (!profil) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg font-semibold text-[var(--text-muted)]">
-          User tidak ditemukan.{" "}
-          <Link href="/" className="text-[var(--accent)] underline">
-            Ke Home
-          </Link>
-        </p>
-      </div>
-    );
+  if (user) {
+    data = await prisma.transaksi.findMany({
+      where: { penggunaId: user.id },
+      orderBy: { tanggal: "desc" },
+    });
   }
-
-  const dataTransaksi = await prisma.transaksi.findMany({
-    orderBy: { tanggal: "desc" },
-  });
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar namaPengguna={profil.nama} />
-      <div className="h-20" />
-
+      <Navbar userName={user?.nama ?? null} isLoggedIn={!!user} />
+      <div className="h-16" />
       <main className="flex-grow max-w-6xl mx-auto px-5 w-full py-8">
-        <RiwayatClient dataTransaksi={dataTransaksi} />
+        <RiwayatClient dataTransaksi={data} />
       </main>
-
-      <Footer namaPengelola={profil.nama} />
+      <Footer namaPengelola={user?.nama ?? null} />
     </div>
   );
 }

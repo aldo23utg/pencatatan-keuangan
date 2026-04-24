@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "./ThemeProvider";
+import { logout } from "@/app/actions";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -10,21 +12,23 @@ const navLinks = [
   { label: "Profil", href: "/profil" },
 ];
 
-export default function Navbar({ namaPengguna }: { namaPengguna: string }) {
+export default function Navbar({
+  userName,
+  isLoggedIn,
+}: {
+  userName: string | null;
+  isLoggedIn: boolean;
+}) {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const { theme, toggle } = useTheme();
 
   const handleScroll = useCallback(() => {
-    const currentY = window.scrollY;
-    if (currentY > lastScrollY && currentY > 80) {
-      setIsVisible(false);
-      setIsOpen(false);
-    } else {
-      setIsVisible(true);
-    }
-    setLastScrollY(currentY);
+    const y = window.scrollY;
+    setIsVisible(y <= lastScrollY || y < 80);
+    setLastScrollY(y);
   }, [lastScrollY]);
 
   useEffect(() => {
@@ -34,102 +38,124 @@ export default function Navbar({ namaPengguna }: { namaPengguna: string }) {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out glass ${
-        isVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        isVisible ? "translate-y-0" : "-translate-y-full"
       }`}
+      style={{ background: "var(--navbar-bg)", backdropFilter: "blur(20px)", borderBottom: "1px solid var(--border)" }}
     >
-      <div className="max-w-6xl mx-auto px-5 py-3.5 flex justify-between items-center">
+      <div className="max-w-6xl mx-auto px-5 py-3 flex justify-between items-center">
         {/* LOGO */}
-        <Link href="/" className="group flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl gradient-accent flex items-center justify-center shadow-lg shadow-[var(--accent-glow)] group-hover:shadow-xl group-hover:shadow-[var(--accent-glow)] transition-shadow duration-300">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center shadow-md">
             <span className="text-black font-black text-sm">U</span>
           </div>
-          <div>
-            <h1 className="text-lg font-black tracking-tight leading-none">
-              UANGKU
-            </h1>
-            <p className="text-[9px] text-[var(--text-muted)] font-mono tracking-widest leading-none mt-0.5">
-              v1.5.26
-            </p>
-          </div>
+          <span className="font-black text-base tracking-tight">UANGKU</span>
         </Link>
 
-        {/* DESKTOP NAV */}
+        {/* DESKTOP */}
         <div className="hidden md:flex items-center gap-1">
-          {navLinks.map((link) => (
+          {navLinks.map((l) => (
             <Link
-              key={link.href}
-              href={link.href}
-              className={`px-4 py-2 text-xs font-semibold tracking-wide rounded-lg transition-all duration-200 ${
-                pathname === link.href
+              key={l.href}
+              href={l.href}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
+                pathname === l.href
                   ? "text-[var(--accent)] bg-[var(--accent-glow)]"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
               }`}
             >
-              {link.label}
+              {l.label}
             </Link>
           ))}
 
-          <div className="ml-4 flex items-center gap-2.5 bg-white/5 rounded-full py-1.5 px-4 border border-white/5">
-            <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse shadow-[0_0_8px_var(--accent)]" />
-            <span className="text-xs font-medium text-[var(--text-secondary)]">
-              {namaPengguna}
-            </span>
-          </div>
+          {/* Theme toggle */}
+          <button
+            onClick={toggle}
+            className="ml-2 w-8 h-8 rounded-lg flex items-center justify-center text-sm hover:bg-[var(--bg-secondary)] transition-colors"
+            title={theme === "dark" ? "Light mode" : "Dark mode"}
+          >
+            {theme === "dark" ? "☀️" : "🌙"}
+          </button>
+
+          {/* User badge or login */}
+          {isLoggedIn ? (
+            <div className="ml-2 flex items-center gap-2">
+              <div className="flex items-center gap-2 bg-[var(--bg-secondary)] rounded-full py-1.5 px-3 border border-[var(--border)]">
+                <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />
+                <span className="text-xs font-medium text-[var(--text-secondary)]">{userName}</span>
+              </div>
+              <form action={logout}>
+                <button type="submit" className="text-[10px] font-semibold text-[var(--danger)] hover:underline px-2 py-1">
+                  Logout
+                </button>
+              </form>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="ml-3 px-4 py-2 text-xs font-bold gradient-accent text-black rounded-lg hover:opacity-90 transition-opacity"
+            >
+              Login
+            </Link>
+          )}
         </div>
 
         {/* HAMBURGER */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden p-2 rounded-lg hover:bg-white/5 transition-colors"
-          aria-label="Toggle menu"
-        >
-          <div className="w-5 h-4 relative flex flex-col justify-between">
-            <span
-              className={`block h-0.5 bg-white rounded-full transition-all duration-300 origin-center ${
-                isOpen ? "rotate-45 translate-y-[7px]" : ""
-              }`}
-            />
-            <span
-              className={`block h-0.5 bg-white rounded-full transition-all duration-300 ${
-                isOpen ? "opacity-0 scale-x-0" : ""
-              }`}
-            />
-            <span
-              className={`block h-0.5 bg-white rounded-full transition-all duration-300 origin-center ${
-                isOpen ? "-rotate-45 -translate-y-[7px]" : ""
-              }`}
-            />
-          </div>
-        </button>
+        <div className="md:hidden flex items-center gap-2">
+          <button onClick={toggle} className="w-8 h-8 flex items-center justify-center text-sm">
+            {theme === "dark" ? "☀️" : "🌙"}
+          </button>
+          <button onClick={() => setIsOpen(!isOpen)} className="p-2" aria-label="Menu">
+            <div className="w-5 h-3.5 relative flex flex-col justify-between">
+              <span className={`block h-0.5 bg-[var(--text-primary)] rounded transition-all duration-300 origin-center ${isOpen ? "rotate-45 translate-y-[6px]" : ""}`} />
+              <span className={`block h-0.5 bg-[var(--text-primary)] rounded transition-all duration-300 ${isOpen ? "opacity-0" : ""}`} />
+              <span className={`block h-0.5 bg-[var(--text-primary)] rounded transition-all duration-300 origin-center ${isOpen ? "-rotate-45 -translate-y-[6px]" : ""}`} />
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* MOBILE DROPDOWN */}
       <div
-        className={`md:hidden overflow-hidden transition-all duration-400 ease-out ${
-          isOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
+        className={`md:hidden overflow-hidden transition-all duration-400 ${
+          isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         }`}
+        style={{ background: "var(--navbar-bg)" }}
       >
-        <div className="px-5 pb-5 pt-1 space-y-1 border-t border-white/5">
-          {navLinks.map((link) => (
+        <div className="px-5 pb-4 pt-1 space-y-1 border-t border-[var(--border)]">
+          {navLinks.map((l) => (
             <Link
-              key={link.href}
-              href={link.href}
+              key={l.href}
+              href={l.href}
               onClick={() => setIsOpen(false)}
-              className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                pathname === link.href
+              className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                pathname === l.href
                   ? "text-[var(--accent)] bg-[var(--accent-glow)]"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5"
+                  : "text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
               }`}
             >
-              {link.label}
+              {l.label}
             </Link>
           ))}
-          <div className="mt-3 flex items-center gap-2.5 px-4 py-2">
-            <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
-            <span className="text-xs text-[var(--text-muted)]">
-              Logged in as <span className="text-[var(--text-secondary)] font-medium">{namaPengguna}</span>
-            </span>
+          <div className="pt-2 border-t border-[var(--border)] mt-2">
+            {isLoggedIn ? (
+              <div className="flex items-center justify-between px-4 py-2">
+                <span className="text-sm text-[var(--text-secondary)]">👤 {userName}</span>
+                <form action={logout}>
+                  <button type="submit" className="text-xs font-semibold text-[var(--danger)] hover:underline">
+                    Logout
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setIsOpen(false)}
+                className="block text-center px-4 py-3 rounded-lg text-sm font-bold gradient-accent text-black"
+              >
+                Login / Register
+              </Link>
+            )}
           </div>
         </div>
       </div>

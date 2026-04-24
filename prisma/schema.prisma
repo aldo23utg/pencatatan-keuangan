@@ -4,16 +4,18 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // KOSONGKAN DI SINI. URL sudah ditarik otomatis dari prisma.config.ts
 }
 
 model Pengguna {
   id        Int         @id @default(autoincrement())
-  nama      String      @default("Ahmad Desvaldo")
-  email     String?     @default("user@example.com")
-  telepon   String?     @default("08123456789")
-  alamat    String?     @default("Indonesia")
-  transaksi Transaksi[] 
+  nama      String
+  username  String      @unique
+  password  String
+  email     String?     @default("")
+  telepon   String?     @default("")
+  alamat    String?     @default("")
+  createdAt DateTime    @default(now())
+  transaksi Transaksi[]
 }
 
 model Transaksi {
@@ -24,6 +26,6 @@ model Transaksi {
   tanggal    DateTime @default(now())
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  penggunaId Int?     
-  pengguna   Pengguna? @relation(fields: [penggunaId], references: [id])
+  penggunaId Int
+  pengguna   Pengguna @relation(fields: [penggunaId], references: [id])
 }
