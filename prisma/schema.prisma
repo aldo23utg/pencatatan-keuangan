@@ -9,8 +9,10 @@ datasource db {
 
 model Pengguna {
   id        Int         @id @default(autoincrement())
-  nama      String      @default("Pengguna Baru")
-  saldoAwal Int         @default(0)
+  nama      String      @default("Ahmad Desvaldo")
+  email     String?     @default("user@example.com")
+  telepon   String?     @default("08123456789")
+  alamat    String?     @default("Indonesia")
   transaksi Transaksi[] 
 }
 
